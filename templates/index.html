@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Explorer{% if current_path %} - {{ current_path }}{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="{{ url_for('list_directory', subpath='') }}" class="breadcrumb-part">Home</a>
+            {% for crumb in breadcrumbs %}
+                <span class="breadcrumb-separator">›</span>
+                <a href="{{ url_for('list_directory', subpath=crumb.path) }}" class="breadcrumb-part">{{ crumb.name }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="file-list">
+            <div class="file-item header-only">
+                {% macro sort_link(sort_key, text) %}
+                    {% set next_order = 'desc' if sort_by == sort_key and sort_order == 'asc' else 'asc' %}
+                    <a href="{{ url_for('list_directory', subpath=current_path, sort=sort_key, order=next_order) }}">
+                        {{ text }}
+                        {% if sort_by == sort_key %}
+                            <span class="sort-arrow">{{ '▲' if sort_order == 'asc' else '▼' }}</span>
+                        {% endif %}
+                    </a>
+                {% endmacro %}
+
+                <div class="col col-no">No.</div>
+                <div class="col col-name">{{ sort_link('name', 'Name') }}</div>
+                <div class="col col-date">{{ sort_link('date', 'Date modified') }}</div>
+                <div class="col col-type">{{ sort_link('type', 'Type') }}</div>
+                <div class="col col-size">{{ sort_link('size', 'Size') }}</div>
+                <div class="col col-actions">Actions</div>
+            </div>
+
+            {% if current_path %}
+            <div class="file-item is-dir parent-dir-item" onclick="window.location='{{ url_for('list_directory', subpath=parent_path) }}'">
+                <div class="col col-no"></div>
+                <div class="col col-name">
+                    <span class="col-icon">📁</span>
+                    <span>..</span>
+                </div>
+                <div class="col col-date"></div>
+                <div class="col col-type"></div>
+                <div class="col col-size"></div>
+                <div class="col col-actions"></div>
+            </div>
+            {% endif %}
+
+            {% for item in items %}
+                <div class="file-item {% if item.is_dir %}is-dir{% else %}is-file{% endif %}" 
+                    {% if item.is_dir %} 
+                        onclick="window.location='{{ url_for('list_directory', subpath=(current_path + '/' + item.name) if current_path else item.name) }}'" 
+                    {% endif %}>
+                    
+                    <div class="col col-no">{{ loop.index }}</div>
+                    <div class="col col-name">
+                        <span class="mobile-label">Name:</span>
+                        <div class="name-wrapper">
+                            <span class="col-icon">{{ item.icon }}</span>
+                            <span>{{ item.name }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col col-date">
+                        <span class="mobile-label">Modified:</span>
+                        <span>{{ item.created }}</span>
+                    </div>
+
+                    <div class="col col-type">
+                        <span class="mobile-label">Type:</span>
+                        <span>{{ item.type }}</span>
+                    </div>
+
+                    <div class="col col-size">
+                        <span class="mobile-label">Size:</span>
+                        <span>{{ item.size }}</span>
+                    </div>
+
+                    <div class="col col-actions">
+                        {% if item.is_viewable %}
+                            <a href="{{ url_for('view_file', filepath=(current_path + '/' + item.name) if current_path else item.name) }}"
+                               class="action-btn view-btn"
+                               title="View"
+                               target="_blank"
+                               onclick="event.stopPropagation();">👁️</a>
+                        {% endif %}
+                        {% if not item.is_dir %}
+                             <a href="{{ url_for('download_file', filepath=(current_path + '/' + item.name) if current_path else item.name) }}"
+                               class="action-btn download-btn"
+                               title="Download"
+                               onclick="event.stopPropagation();">📥</a>
+                             <a href="#"
+                               class="action-btn copy-btn"
+                               title="Copy link"
+                               onclick="copyLink(this, event, '{{ url_for('download_file', filepath=(current_path + '/' + item.name) if current_path else item.name, _external=True) }}')">🔗</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+    function showCopyFeedback(element) {
+        const originalContent = element.innerHTML;
+        const originalTitle = element.title;
+        element.innerHTML = '✅';
+        element.title = 'Copied!';
+        setTimeout(() => {
+            element.innerHTML = originalContent;
+            element.title = originalTitle;
+        }, 1500);
+    }
+
+    function copyLink(element, event, url) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Modern browsers in secure contexts (HTTPS, localhost)
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(url).then(() => {
+                showCopyFeedback(element);
+            }).catch(err => {
+                console.error('Clipboard API failed: ', err);
+                alert('Could not copy link.');
+            });
+        } else {
+            // Fallback for older browsers or insecure contexts (HTTP)
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = 'fixed'; // Prevent scrolling to bottom
+            textArea.style.top = 0;
+            textArea.style.left = 0;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showCopyFeedback(element);
+                } else {
+                    alert('Could not copy link.');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed: ', err);
+                alert('Could not copy link.');
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+    </script>
+</body>
+</html>
