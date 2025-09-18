@@ -11,11 +11,18 @@
 <body>
     <div class="container">
         <div class="breadcrumb">
-            <a href="{{ url_for('list_directory', subpath='') }}" class="breadcrumb-part">Home</a>
-            {% for crumb in breadcrumbs %}
-                <span class="breadcrumb-separator">›</span>
-                <a href="{{ url_for('list_directory', subpath=crumb.path) }}" class="breadcrumb-part">{{ crumb.name }}</a>
-            {% endfor %}
+            <div class="breadcrumb-nav">
+                <a href="{{ url_for('list_directory', subpath='') }}" class="breadcrumb-part">Home</a>
+                {% for crumb in breadcrumbs %}
+                    <span class="breadcrumb-separator">›</span>
+                    <a href="{{ url_for('list_directory', subpath=crumb.path) }}" class="breadcrumb-part">{{ crumb.name }}</a>
+                {% endfor %}
+            </div>
+            {% if total_size %}
+            <div class="breadcrumb-total-size">
+                Total: <strong>{{ total_size }}</strong>
+            </div>
+            {% endif %}
         </div>
 
         <div class="file-list">

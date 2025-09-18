@@ -44,6 +44,17 @@ def get_human_readable_size(size_bytes):
     s = round(size_bytes / p, 2)
     return f"{s} {size_name[i]}"
 
+def get_directory_size(directory):
+    """Tính tổng dung lượng của một thư mục (đệ quy)."""
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # Bỏ qua các liên kết tượng trưng để tránh tính lặp
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
+
 @app.route('/')
 @app.route('/<path:subpath>')
 def list_directory(subpath=''):
@@ -140,6 +151,11 @@ def list_directory(subpath=''):
                 else:
                     path_so_far = part
                 breadcrumbs.append({'name': part, 'path': path_so_far})
+        
+        total_size_str = None
+        if not subpath:  # Chỉ tính khi ở thư mục gốc
+            total_size_bytes = get_directory_size(SHARED_FILES_DIR)
+            total_size_str = get_human_readable_size(total_size_bytes)
 
         return render_template('index.html', 
                                items=sorted_items, 
@@ -147,7 +163,8 @@ def list_directory(subpath=''):
                                parent_path=parent_path,
                                breadcrumbs=breadcrumbs,
                                sort_by=sort_by,
-                               sort_order=sort_order)
+                               sort_order=sort_order,
+                               total_size=total_size_str)
     except Exception as e:
         # Log the error for debugging
         app.logger.error(f"Error in list_directory: {e}")

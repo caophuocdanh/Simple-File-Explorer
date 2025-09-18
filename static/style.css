@@ -16,6 +16,7 @@ body {
 /* Breadcrumb */
 .breadcrumb {
     display: flex;
+    justify-content: space-between; /* Căn chỉnh các mục con */
     align-items: center;
     padding: 8px 12px;
     background-color: #fff;
@@ -24,9 +25,23 @@ body {
     margin-bottom: 10px;
     flex-wrap: wrap;
 }
+
+.breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
 .breadcrumb-part { text-decoration: none; color: #005da9; padding: 4px 8px; border-radius: 4px; }
 .breadcrumb-part:hover { background-color: #e9f5ff; text-decoration: none; }
 .breadcrumb-separator { color: #6c757d; margin: 0 4px; }
+
+.breadcrumb-total-size {
+    font-size: 0.9em;
+    color: #586069;
+    margin-left: auto; /* Đẩy về phía bên phải */
+    padding-left: 16px; /* Thêm khoảng cách với breadcrumb nav */
+}
 
 /* File List */
 .file-list {
