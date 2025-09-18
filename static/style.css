@@ -101,9 +101,20 @@ body {
 .col-actions { flex: 1.5; min-width: 160px; justify-content: center; }
 
 .name-wrapper { display: flex; align-items: center; }
-.col-icon { font-size: 1.4em; margin-right: 10px; width: 25px; text-align: center; }
+.col-icon {
+    font-size: 1.6em;
+    margin-right: 10px;
+    width: 25px;
+    text-align: center;
+    color: #333; /* Make icons black */
+}
 
 .mobile-label { display: none; }
+
+.sort-arrow {
+    margin-left: 5px;
+    color: #333; /* Make sort arrows black */
+}
 
 .action-btn {
     display: inline-flex; /* Use flex to center icon */
@@ -116,16 +127,25 @@ body {
     font-weight: 600;
     text-decoration: none;
     border-radius: 6px;
-    border: 1px solid;
+    border: 1px solid #333; /* Black border */
     cursor: pointer;
     margin: 0 2px;
+    color: #333; /* Black icon */
+    background-color: #fff; /* White background */
 }
-.view-btn { color: #28a745; background-color: #fff; border-color: #28a745; }
-.view-btn:hover { background-color: #28a745; color: #fff; }
-.download-btn { color: #007bff; background-color: #fff; border-color: #007bff; }
-.download-btn:hover { background-color: #007bff; color: #fff; }
-.copy-btn { color: #6f42c1; background-color: #fff; border-color: #6f42c1; }
-.copy-btn:hover { background-color: #6f42c1; color: #fff; }
+.action-btn:hover {
+    background-color: #333; /* Black background on hover */
+    color: #fff; /* White icon on hover */
+    border-color: #333;
+}
+
+/* Remove specific color overrides for action buttons */
+.view-btn { }
+.view-btn:hover { }
+.download-btn { }
+.download-btn:hover { }
+.copy-btn { }
+.copy-btn:hover { }
 
 /* --- Responsive --- */
 @media (max-width: 768px) {

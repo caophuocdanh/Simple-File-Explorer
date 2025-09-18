@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Explorer{% if current_path %} - {{ current_path }}{% endif %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>">
 </head>
 <body>
@@ -32,7 +33,7 @@
                     <a href="{{ url_for('list_directory', subpath=current_path, sort=sort_key, order=next_order) }}">
                         {{ text }}
                         {% if sort_by == sort_key %}
-                            <span class="sort-arrow">{{ '▲' if sort_order == 'asc' else '▼' }}</span>
+                            <span class="sort-arrow">{% if sort_order == 'asc' %}<i class="fas fa-sort-up"></i>{% else %}<i class="fas fa-sort-down"></i>{% endif %}</span>
                         {% endif %}
                     </a>
                 {% endmacro %}
@@ -49,7 +50,7 @@
             <div class="file-item is-dir parent-dir-item" onclick="window.location='{{ url_for('list_directory', subpath=parent_path) }}'">
                 <div class="col col-no"></div>
                 <div class="col col-name">
-                    <span class="col-icon">📁</span>
+                    <span class="col-icon"><i class="fas fa-folder-open"></i></span>
                     <span>..</span>
                 </div>
                 <div class="col col-date"></div>
@@ -69,7 +70,7 @@
                     <div class="col col-name">
                         <span class="mobile-label">Name:</span>
                         <div class="name-wrapper">
-                            <span class="col-icon">{{ item.icon }}</span>
+                            <span class="col-icon"><i class="{{ item.icon }}"></i></span>
                             <span>{{ item.name }}</span>
                         </div>
                     </div>
@@ -90,22 +91,22 @@
                     </div>
 
                     <div class="col col-actions">
+                        {% if not item.is_dir %}
+                             <a href="{{ url_for('download_file', filepath=(current_path + '/' + item.name) if current_path else item.name) }}"
+                               class="action-btn download-btn"
+                               title="Download"
+                               onclick="event.stopPropagation();"><i class="fas fa-download"></i></a>
+                             <a href="#"
+                               class="action-btn copy-btn"
+                               title="Copy link"
+                               onclick="copyLink(this, event, '{{ url_for('download_file', filepath=(current_path + '/' + item.name) if current_path else item.name, _external=True) }}')"><i class="fas fa-link"></i></a>
+                        {% endif %}
                         {% if item.is_viewable %}
                             <a href="{{ url_for('view_file', filepath=(current_path + '/' + item.name) if current_path else item.name) }}"
                                class="action-btn view-btn"
                                title="View"
                                target="_blank"
-                               onclick="event.stopPropagation();">👁️</a>
-                        {% endif %}
-                        {% if not item.is_dir %}
-                             <a href="{{ url_for('download_file', filepath=(current_path + '/' + item.name) if current_path else item.name) }}"
-                               class="action-btn download-btn"
-                               title="Download"
-                               onclick="event.stopPropagation();">📥</a>
-                             <a href="#"
-                               class="action-btn copy-btn"
-                               title="Copy link"
-                               onclick="copyLink(this, event, '{{ url_for('download_file', filepath=(current_path + '/' + item.name) if current_path else item.name, _external=True) }}')">🔗</a>
+                               onclick="event.stopPropagation();"><i class="fas fa-eye"></i></a>
                         {% endif %}
                     </div>
                 </div>
@@ -117,7 +118,7 @@
     function showCopyFeedback(element) {
         const originalContent = element.innerHTML;
         const originalTitle = element.title;
-        element.innerHTML = '✅';
+        element.innerHTML = '<i class="fas fa-check"></i>';
         element.title = 'Copied!';
         setTimeout(() => {
             element.innerHTML = originalContent;

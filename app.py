@@ -11,28 +11,36 @@ app = Flask(__name__)
 SHARED_FILES_DIR = os.path.join(os.getcwd(), 'files')
 
 def get_icon_for_filename(filename):
-    """Trả về emoji icon dựa trên phần mở rộng của file."""
+    """Trả về Font Awesome icon class dựa trên phần mở rộng của file."""
     ext = os.path.splitext(filename)[1].lower()
     if ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg']:
-        return '🖼️'  # Icon ảnh
+        return 'fas fa-image'  # Icon ảnh
     elif ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm']:
-        return '📹'  # Icon video
+        return 'fas fa-video'  # Icon video
     elif ext in ['.mp3', '.wav', '.flac', '.aac', '.ogg']:
-        return '🎵'  # Icon nhạc
+        return 'fas fa-music'  # Icon nhạc
     elif ext in ['.exe', '.msi']:
-        return '⚙️'  # Icon ứng dụng/cài đặt
+        return 'fas fa-cog'  # Icon ứng dụng/cài đặt
     elif ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
-        return '📦'  # Icon file nén
-    elif ext in ['.txt', '.md', '.json', '.xml', '.html', '.css', '.js', '.py', '.pdf']:
-        return '📄'  # Icon văn bản/code
+        return 'fas fa-file-archive'  # Icon file nén
+    elif ext == '.iso':
+        return 'fas fa-compact-disc' # Icon file ảnh đĩa
+    elif ext == '.gho':
+        return 'fas fa-ghost' # Icon file Norton Ghost
+    elif ext in ['.txt', '.md']:
+        return 'fas fa-file-alt'  # Icon văn bản
+    elif ext in ['.json', '.xml', '.html', '.css', '.js', '.py']:
+        return 'fas fa-file-code'  # Icon mã
+    elif ext == '.pdf':
+        return 'fas fa-file-pdf' # Icon PDF
     elif ext in ['.doc', '.docx']:
-        return '📝'  # Icon Word
+        return 'fas fa-file-word'  # Icon Word
     elif ext in ['.xls', '.xlsx']:
-        return '📊'  # Icon Excel
+        return 'fas fa-file-excel'  # Icon Excel
     elif ext in ['.ppt', '.pptx']:
-        return '📈'  # Icon PowerPoint
+        return 'fas fa-file-powerpoint'  # Icon PowerPoint
     else:
-        return '📑'  # Icon file chung
+        return 'fas fa-file'  # Icon file chung
 
 def get_human_readable_size(size_bytes):
     """Chuyển đổi kích thước file (bytes) sang định dạng dễ đọc."""
@@ -84,7 +92,7 @@ def list_directory(subpath=''):
             stat_info = os.stat(item_path)
             items_details.append({
                 "is_dir": True,
-                "icon": '📁',
+                "icon": 'fas fa-folder',
                 "name": item_name,
                 "created": datetime.fromtimestamp(stat_info.st_mtime).strftime('%d/%m/%Y %I:%M %p'),
                 "type": "File Folder",
