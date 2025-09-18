@@ -2,7 +2,7 @@
 body {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
     background-color: #f0f2f5;
-    color: #1c1e21;
+    color: black; /* Toàn bộ web là đen/trắng */
     margin: 0;
     font-size: 14px;
 }
@@ -32,13 +32,13 @@ body {
     flex-wrap: wrap;
 }
 
-.breadcrumb-part { text-decoration: none; color: #005da9; padding: 4px 8px; border-radius: 4px; }
+.breadcrumb-part { text-decoration: none; color: black; padding: 4px 8px; border-radius: 4px; }
 .breadcrumb-part:hover { background-color: #e9f5ff; text-decoration: none; }
-.breadcrumb-separator { color: #6c757d; margin: 0 4px; }
+.breadcrumb-separator { color: gray; margin: 0 4px; }
 
 .breadcrumb-total-size {
     font-size: 0.9em;
-    color: #586069;
+    color: black;
     margin-left: auto; /* Đẩy về phía bên phải */
     padding-left: 16px; /* Thêm khoảng cách với breadcrumb nav */
 }
@@ -68,24 +68,24 @@ body {
 
 .file-item.header-only {
     font-weight: 600;
-    color: #586069;
+    color: black;
     background-color: #f9fbfc;
     border-bottom: 1px solid #d1d1d1;
 }
 
 .header-only a {
     text-decoration: none;
-    color: inherit;
+    color: black;
     display: block;
 }
 
 .header-only a:hover {
-    color: #0056b3;
+    color: gray;
 }
 
 .sort-arrow {
     margin-left: 5px;
-    color: #0056b3;
+    color: black;
 }
 
 .col {
@@ -93,7 +93,7 @@ body {
     align-items: center;
 }
 
-.col-no { flex: 0 0 40px; text-align: right; color: #586069; padding-right: 15px; }
+.col-no { flex: 0 0 40px; text-align: center; color: black; padding-right: 15px; justify-content: center;}
 .col-name { flex: 4; min-width: 200px; }
 .col-date { flex: 2; min-width: 150px; }
 .col-type { flex: 1.5; min-width: 100px; }
@@ -106,14 +106,13 @@ body {
     margin-right: 10px;
     width: 25px;
     text-align: center;
-    color: #333; /* Make icons black */
 }
 
 .mobile-label { display: none; }
 
 .sort-arrow {
     margin-left: 5px;
-    color: #333; /* Make sort arrows black */
+    color: black; /* Make sort arrows black */
 }
 
 .action-btn {
@@ -127,25 +126,16 @@ body {
     font-weight: 600;
     text-decoration: none;
     border-radius: 6px;
-    border: 1px solid #333; /* Black border */
+    border: 1px solid;
     cursor: pointer;
     margin: 0 2px;
-    color: #333; /* Black icon */
-    background-color: #fff; /* White background */
 }
-.action-btn:hover {
-    background-color: #333; /* Black background on hover */
-    color: #fff; /* White icon on hover */
-    border-color: #333;
-}
-
-/* Remove specific color overrides for action buttons */
-.view-btn { }
-.view-btn:hover { }
-.download-btn { }
-.download-btn:hover { }
-.copy-btn { }
-.copy-btn:hover { }
+.view-btn { color: black; background-color: #fff; border-color: black; }
+.view-btn:hover { background-color: black; color: #fff; }
+.download-btn { color: black; background-color: #fff; border-color: black; }
+.download-btn:hover { background-color: black; color: #fff; }
+.copy-btn { color: black; background-color: #fff; border-color: black; }
+.copy-btn:hover { background-color: black; color: #fff; }
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
@@ -167,7 +157,7 @@ body {
     .mobile-label {
         display: inline-block;
         font-weight: 600;
-        color: #586069;
+        color: black;
         margin-right: 10px;
         width: 100px; /* Fixed width for alignment */
     }

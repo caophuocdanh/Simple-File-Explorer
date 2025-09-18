@@ -161,9 +161,9 @@ def list_directory(subpath=''):
                 breadcrumbs.append({'name': part, 'path': path_so_far})
         
         total_size_str = None
-        if not subpath:  # Chỉ tính khi ở thư mục gốc
-            total_size_bytes = get_directory_size(SHARED_FILES_DIR)
-            total_size_str = get_human_readable_size(total_size_bytes)
+        # Luôn tính tổng dung lượng của thư mục chia sẻ gốc
+        total_size_bytes = get_directory_size(SHARED_FILES_DIR)
+        total_size_str = get_human_readable_size(total_size_bytes)
 
         return render_template('index.html', 
                                items=sorted_items, 
