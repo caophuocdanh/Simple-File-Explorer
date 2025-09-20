@@ -1,14 +1,44 @@
 
 import os
-from flask import Flask, render_template, send_from_directory, abort, request, make_response
+import logging
+from flask import Flask, render_template, send_from_directory, abort, request, make_response, url_for
 from datetime import datetime
 import math
 import sys
 from flask_compress import Compress
 from waitress import serve
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
+
+# --- Logging Configuration ---
+# Clear existing handlers to prevent duplicate logs
+if app.logger.hasHandlers():
+    app.logger.handlers.clear()
+
+# Create a new handler with a specific format
+handler = logging.StreamHandler()
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+handler.setFormatter(formatter)
+
+# Add the new handler and set log level
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+# --- End Logging Configuration ---
+
+
 Compress(app)
+
+@app.before_request
+def log_request_info():
+    """Log each incoming request to the console, ignoring static file requests."""
+    if request.path.startswith('/static/'):
+        return
+    app.logger.info(
+        f'Access Log: {request.remote_addr} - "{request.method} {request.path} {request.environ.get("SERVER_PROTOCOL")}"'
+    )
+
+
 
 # Đường dẫn tuyệt đối đến thư mục gốc cần chia sẻ
 SHARED_FILES_DIR = os.path.join(os.getcwd(), 'files')
@@ -80,9 +110,11 @@ def list_directory(subpath=''):
         requested_path = os.path.join(SHARED_FILES_DIR, subpath)
         
         if not os.path.abspath(requested_path).startswith(os.path.abspath(SHARED_FILES_DIR)):
+            app.logger.warning(f"Forbidden path traversal attempt detected for path: '{subpath}'")
             abort(404)
 
         if not os.path.exists(requested_path) or not os.path.isdir(requested_path):
+            app.logger.info(f"Request for non-existent path: '{subpath}'")
             abort(404)
 
         items_details = []
@@ -176,9 +208,12 @@ def list_directory(subpath=''):
                                sort_by=sort_by,
                                sort_order=sort_order,
                                total_size=total_size_str)
+    except HTTPException as e:
+        # Let Flask handle HTTP exceptions (like 404)
+        raise e
     except Exception as e:
         # Log the error for debugging
-        app.logger.error(f"Error in list_directory: {e}")
+        app.logger.error(f"Internal error in list_directory: {e}")
         # Return a user-friendly error page
         abort(500) # Internal Server Error
 
@@ -244,6 +279,22 @@ def sitemap():
     response.headers["Content-Type"] = "application/xml"
 
     return response
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    app.logger.warning(f"Handled 404 error for path: {request.path}")
+    return render_template('404.html'), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    app.logger.warning(f"Handled 403 error for path: {request.path}")
+    return render_template('403.html'), 403
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Handled 500 error for path: {request.path} - Error: {e}")
+    return render_template('500.html'), 500
 
 
 if __name__ == '__main__':

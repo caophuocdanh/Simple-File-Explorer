@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>403 - Cấm Truy Cập</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .error-container { text-align: center; padding: 50px 20px; max-width: 600px; margin: 40px auto; background-color: #fff; border: 1px solid #d1d1d1; border-radius: 8px; }
+        .error-container h1 { font-size: 6em; margin: 0; color: #ffc107; }
+        .error-container h2 { font-size: 1.5em; margin-top: 0; color: #333; }
+        .error-container p { color: #666; }
+        .error-container a { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #fff; text-decoration: none; border-radius: 5px; font-weight: 600; }
+        .error-container a:hover { background-color: #555; }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <h1>403</h1>
+        <h2>Cấm Truy Cập</h2>
+        <p>Rất tiếc, bạn không có quyền truy cập vào tài nguyên này.</p>
+        <a href="{{ url_for('list_directory') }}">Quay về trang chủ</a>
+    </div>
+</body>
+</html>
