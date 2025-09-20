@@ -1,4 +1,5 @@
-
+pip install -r requirements.txt
+cls
 @echo off
 TITLE File Explorer Server
 ECHO Khoi dong File Explorer server tai port 5006...

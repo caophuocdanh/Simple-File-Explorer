@@ -4,29 +4,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Explorer{% if current_path %} - {{ current_path }}{% endif %}</title>
+    <title>danhcp - File Explorer{% if current_path %} - {{ current_path }}{% endif %}</title>
+    <meta name="description" content="Bộ sưu tập phần mềm và ứng dụng miễn phí, an toàn cho mọi nhu cầu. Tìm và tải về những công cụ cần thiết được chọn lọc kỹ lưỡng cho công việc và học tập.">
+    <meta name="keywords" content="phần mềm miễn phí, ứng dụng hữu ích, công cụ học tập, phần mềm văn phòng, tiện ích giải trí, tải miễn phí">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:title" content="danhcp - File Explorer{% if current_path %} - {{ current_path }}{% endif %}">
+    <meta property="og:description" content="Bộ sưu tập phần mềm và ứng dụng miễn phí, an toàn cho mọi nhu cầu. Tìm và tải về những công cụ cần thiết được chọn lọc kỹ lưỡng cho công việc và học tập.">
+    <meta property="og:image" content="{{ url_for('static', filename='2882550.jpg', _external=True) }}">
+    <meta property="og:image:type" content="image/jpeg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ url_for('static', filename='2882550.jpg', _external=True) }}">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='2882550.jpg') }}">
 </head>
 <body>
     <div class="container">
-        <div class="breadcrumb">
-            <div class="breadcrumb-nav">
+        <h1 class="page-title">Bộ sưu tập Phần mềm và Ứng dụng</h1>
+        <header class="breadcrumb">
+            <nav class="breadcrumb-nav" aria-label="breadcrumb">
                 <a href="{{ url_for('list_directory', subpath='') }}" class="breadcrumb-part">Home</a>
                 {% for crumb in breadcrumbs %}
                     <span class="breadcrumb-separator">›</span>
                     <a href="{{ url_for('list_directory', subpath=crumb.path) }}" class="breadcrumb-part">{{ crumb.name }}</a>
                 {% endfor %}
-            </div>
+            </nav>
             {% if total_size %}
             <div class="breadcrumb-total-size">
                 Total: <strong>{{ total_size }}</strong>
             </div>
             {% endif %}
-        </div>
+        </header>
 
-        <div class="file-list">
+        <main class="file-list">
             <div class="file-item header-only">
                 {% macro sort_link(sort_key, text) %}
                     {% set next_order = 'desc' if sort_by == sort_key and sort_order == 'asc' else 'asc' %}
@@ -111,8 +128,12 @@
                     </div>
                 </div>
             {% endfor %}
-        </div>
+        </main>
     </div>
+
+    <footer class="site-footer">
+        <p>&copy; 2025 Simple File Explorer. All rights reserved.</p>
+    </footer>
 
     <script>
     function showCopyFeedback(element) {

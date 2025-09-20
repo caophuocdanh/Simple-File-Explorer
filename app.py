@@ -1,11 +1,14 @@
 
 import os
-from flask import Flask, render_template, send_from_directory, abort, request
+from flask import Flask, render_template, send_from_directory, abort, request, make_response
 from datetime import datetime
 import math
 import sys
+from flask_compress import Compress
+from waitress import serve
 
 app = Flask(__name__)
+Compress(app)
 
 # Đường dẫn tuyệt đối đến thư mục gốc cần chia sẻ
 SHARED_FILES_DIR = os.path.join(os.getcwd(), 'files')
@@ -206,6 +209,43 @@ def download_file(filepath):
 
     return send_from_directory(download_dir, filename, as_attachment=True)
 
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """
+    Tạo sitemap.xml động.
+    """
+    pages = []
+    
+    # Thêm URL gốc
+    pages.append({
+        'loc': url_for('list_directory', _external=True),
+        'lastmod': datetime.now().date().isoformat(),
+        'changefreq': 'daily',
+        'priority': '1.0'
+    })
+
+    # Quét qua tất cả các thư mục
+    for root, dirs, _ in os.walk(SHARED_FILES_DIR):
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            # Chuyển đổi dấu \\ thành / cho URL
+            rel_path = os.path.relpath(dir_path, SHARED_FILES_DIR).replace('\\', '/')
+            modified_time = datetime.fromtimestamp(os.path.getmtime(dir_path)).date().isoformat()
+            pages.append({
+                'loc': url_for('list_directory', subpath=rel_path, _external=True),
+                'lastmod': modified_time,
+                'changefreq': 'weekly',
+                'priority': '0.8'
+            })
+
+    sitemap_template = render_template('sitemap.xml', pages=pages)
+    response = make_response(sitemap_template)
+    response.headers["Content-Type"] = "application/xml"
+
+    return response
+
+
 if __name__ == '__main__':
     # Kiểm tra và tạo thư mục chia sẻ nếu chưa có
     if not os.path.exists(SHARED_FILES_DIR):
@@ -226,4 +266,4 @@ if __name__ == '__main__':
     
     print(f"--- Khởi động server tại http://0.0.0.0:{port} ---")
     print("--- Nhấn CTRL+C để dừng server ---")
-    app.run(debug=True, host='0.0.0.0', port=port)
+    serve(app, host='0.0.0.0', port=port)

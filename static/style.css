@@ -187,3 +187,23 @@ body {
         margin-top: 8px; 
     }
 }
+
+/* --- Footer --- */
+.site-footer {
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 20px;
+    color: #666;
+    font-size: 0.9em;
+    border-top: 1px solid #e1e4e8;
+}
+
+/* --- Page Title (Visually Hidden for SEO) --- */
+.page-title {
+    position: absolute;
+    left: -10000px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
