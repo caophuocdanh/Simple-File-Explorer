@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: http://danhcp.dssddns.net:5006/sitemap.xml

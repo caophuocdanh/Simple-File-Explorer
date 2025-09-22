@@ -1,38 +1,79 @@
 
 import os
-from flask import Flask, render_template, send_from_directory, abort, request
+import logging
+from flask import Flask, render_template, send_from_directory, abort, request, make_response, url_for
 from datetime import datetime
 import math
 import sys
+from flask_compress import Compress
+from waitress import serve
+from werkzeug.exceptions import HTTPException
 
 app = Flask(__name__)
+
+# --- Logging Configuration ---
+# Clear existing handlers to prevent duplicate logs
+if app.logger.hasHandlers():
+    app.logger.handlers.clear()
+
+# Create a new handler with a specific format
+handler = logging.StreamHandler()
+formatter = logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s')
+handler.setFormatter(formatter)
+
+# Add the new handler and set log level
+app.logger.addHandler(handler)
+app.logger.setLevel(logging.INFO)
+# --- End Logging Configuration ---
+
+
+Compress(app)
+
+@app.before_request
+def log_request_info():
+    """Log each incoming request to the console, ignoring static file requests."""
+    if request.path.startswith('/static/'):
+        return
+    app.logger.info(
+        f'Access Log: {request.remote_addr} - "{request.method} {request.path} {request.environ.get("SERVER_PROTOCOL")}"'
+    )
+
+
 
 # Đường dẫn tuyệt đối đến thư mục gốc cần chia sẻ
 SHARED_FILES_DIR = os.path.join(os.getcwd(), 'files')
 
 def get_icon_for_filename(filename):
-    """Trả về emoji icon dựa trên phần mở rộng của file."""
+    """Trả về Font Awesome icon class dựa trên phần mở rộng của file."""
     ext = os.path.splitext(filename)[1].lower()
     if ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp', '.svg']:
-        return '🖼️'  # Icon ảnh
+        return 'fas fa-image'  # Icon ảnh
     elif ext in ['.mp4', '.mov', '.avi', '.mkv', '.webm']:
-        return '📹'  # Icon video
+        return 'fas fa-video'  # Icon video
     elif ext in ['.mp3', '.wav', '.flac', '.aac', '.ogg']:
-        return '🎵'  # Icon nhạc
+        return 'fas fa-music'  # Icon nhạc
     elif ext in ['.exe', '.msi']:
-        return '⚙️'  # Icon ứng dụng/cài đặt
+        return 'fas fa-cog'  # Icon ứng dụng/cài đặt
     elif ext in ['.zip', '.rar', '.7z', '.tar', '.gz']:
-        return '📦'  # Icon file nén
-    elif ext in ['.txt', '.md', '.json', '.xml', '.html', '.css', '.js', '.py', '.pdf']:
-        return '📄'  # Icon văn bản/code
+        return 'fas fa-file-archive'  # Icon file nén
+    elif ext == '.iso':
+        return 'fas fa-compact-disc' # Icon file ảnh đĩa
+    elif ext == '.gho':
+        return 'fas fa-ghost' # Icon file Norton Ghost
+    elif ext in ['.txt', '.md']:
+        return 'fas fa-file-alt'  # Icon văn bản
+    elif ext in ['.json', '.xml', '.html', '.css', '.js', '.py']:
+        return 'fas fa-file-code'  # Icon mã
+    elif ext == '.pdf':
+        return 'fas fa-file-pdf' # Icon PDF
     elif ext in ['.doc', '.docx']:
-        return '📝'  # Icon Word
+        return 'fas fa-file-word'  # Icon Word
     elif ext in ['.xls', '.xlsx']:
-        return '📊'  # Icon Excel
+        return 'fas fa-file-excel'  # Icon Excel
     elif ext in ['.ppt', '.pptx']:
-        return '📈'  # Icon PowerPoint
+        return 'fas fa-file-powerpoint'  # Icon PowerPoint
     else:
-        return '📑'  # Icon file chung
+        return 'fas fa-file'  # Icon file chung
 
 def get_human_readable_size(size_bytes):
     """Chuyển đổi kích thước file (bytes) sang định dạng dễ đọc."""
@@ -43,6 +84,17 @@ def get_human_readable_size(size_bytes):
     p = math.pow(1024, i)
     s = round(size_bytes / p, 2)
     return f"{s} {size_name[i]}"
+
+def get_directory_size(directory):
+    """Tính tổng dung lượng của một thư mục (đệ quy)."""
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # Bỏ qua các liên kết tượng trưng để tránh tính lặp
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+    return total_size
 
 @app.route('/')
 @app.route('/<path:subpath>')
@@ -58,9 +110,11 @@ def list_directory(subpath=''):
         requested_path = os.path.join(SHARED_FILES_DIR, subpath)
         
         if not os.path.abspath(requested_path).startswith(os.path.abspath(SHARED_FILES_DIR)):
+            app.logger.warning(f"Forbidden path traversal attempt detected for path: '{subpath}'")
             abort(404)
 
         if not os.path.exists(requested_path) or not os.path.isdir(requested_path):
+            app.logger.info(f"Request for non-existent path: '{subpath}'")
             abort(404)
 
         items_details = []
@@ -73,7 +127,7 @@ def list_directory(subpath=''):
             stat_info = os.stat(item_path)
             items_details.append({
                 "is_dir": True,
-                "icon": '📁',
+                "icon": 'fas fa-folder',
                 "name": item_name,
                 "created": datetime.fromtimestamp(stat_info.st_mtime).strftime('%d/%m/%Y %I:%M %p'),
                 "type": "File Folder",
@@ -140,6 +194,11 @@ def list_directory(subpath=''):
                 else:
                     path_so_far = part
                 breadcrumbs.append({'name': part, 'path': path_so_far})
+        
+        total_size_str = None
+        # Luôn tính tổng dung lượng của thư mục chia sẻ gốc
+        total_size_bytes = get_directory_size(SHARED_FILES_DIR)
+        total_size_str = get_human_readable_size(total_size_bytes)
 
         return render_template('index.html', 
                                items=sorted_items, 
@@ -147,10 +206,14 @@ def list_directory(subpath=''):
                                parent_path=parent_path,
                                breadcrumbs=breadcrumbs,
                                sort_by=sort_by,
-                               sort_order=sort_order)
+                               sort_order=sort_order,
+                               total_size=total_size_str)
+    except HTTPException as e:
+        # Let Flask handle HTTP exceptions (like 404)
+        raise e
     except Exception as e:
         # Log the error for debugging
-        app.logger.error(f"Error in list_directory: {e}")
+        app.logger.error(f"Internal error in list_directory: {e}")
         # Return a user-friendly error page
         abort(500) # Internal Server Error
 
@@ -181,6 +244,59 @@ def download_file(filepath):
 
     return send_from_directory(download_dir, filename, as_attachment=True)
 
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """
+    Tạo sitemap.xml động.
+    """
+    pages = []
+    
+    # Thêm URL gốc
+    pages.append({
+        'loc': url_for('list_directory', _external=True),
+        'lastmod': datetime.now().date().isoformat(),
+        'changefreq': 'daily',
+        'priority': '1.0'
+    })
+
+    # Quét qua tất cả các thư mục
+    for root, dirs, _ in os.walk(SHARED_FILES_DIR):
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            # Chuyển đổi dấu \\ thành / cho URL
+            rel_path = os.path.relpath(dir_path, SHARED_FILES_DIR).replace('\\', '/')
+            modified_time = datetime.fromtimestamp(os.path.getmtime(dir_path)).date().isoformat()
+            pages.append({
+                'loc': url_for('list_directory', subpath=rel_path, _external=True),
+                'lastmod': modified_time,
+                'changefreq': 'weekly',
+                'priority': '0.8'
+            })
+
+    sitemap_template = render_template('sitemap.xml', pages=pages)
+    response = make_response(sitemap_template)
+    response.headers["Content-Type"] = "application/xml"
+
+    return response
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    app.logger.warning(f"Handled 404 error for path: {request.path}")
+    return render_template('404.html'), 404
+
+@app.errorhandler(403)
+def forbidden(e):
+    app.logger.warning(f"Handled 403 error for path: {request.path}")
+    return render_template('403.html'), 403
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Handled 500 error for path: {request.path} - Error: {e}")
+    return render_template('500.html'), 500
+
+
 if __name__ == '__main__':
     # Kiểm tra và tạo thư mục chia sẻ nếu chưa có
     if not os.path.exists(SHARED_FILES_DIR):
@@ -201,4 +317,4 @@ if __name__ == '__main__':
     
     print(f"--- Khởi động server tại http://0.0.0.0:{port} ---")
     print("--- Nhấn CTRL+C để dừng server ---")
-    app.run(debug=True, host='0.0.0.0', port=port)
+    serve(app, host='0.0.0.0', port=port)
